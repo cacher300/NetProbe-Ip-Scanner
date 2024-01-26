@@ -54,15 +54,11 @@ with open("open_ports.csv", mode="w", newline='') as file:
     #Header
     writer.writerow(["IP Address", "Port", "Status"])
 
-    for i in range (1, 255):
-        ip_address = base_ip + str(i)
-        port_to_scan = 80
+for i in range (1, 255):
+    ip_address = base_ip + str(i)
+    port_to_scan = 80
 
-        if scan_port(ip_address, port_to_scan):
-            print(f"Port {port_to_scan} is open on {ip_address}")
-            writer.writerow([ip_address, port_to_scan, "Open"])
-        else:
-            # Uncomment the next line if you want to record closed ports as well
-            # writer.writerow([ip_address, port_to_scan, "Closed/Filtered"])
-            continue
+    if scan_port(ip_address, port_to_scan):
+        print(f"Port {port_to_scan} is open on {ip_address}")
+
 
