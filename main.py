@@ -1,6 +1,5 @@
 import socket
 import ipaddress
-import csv
 
 
 def get_local_ip():
@@ -48,11 +47,6 @@ base_ip = ip_list[0]
 parts = base_ip.split('.')
 base_ip = '.'.join(parts[:-1]) + '.'
 print(base_ip)
-
-with open("open_ports.csv", mode="w", newline='') as file:
-    writer = csv.writer(file)
-    #Header
-    writer.writerow(["IP Address", "Port", "Status"])
 
 for i in range (1, 255):
     ip_address = base_ip + str(i)
