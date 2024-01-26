@@ -4,6 +4,11 @@ import threading
 from queue import Queue
 import csv
 
+a = True
+
+while a == True:
+    print("h")
+
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -65,4 +70,5 @@ with open("open_ports.csv", mode="w", newline='') as file:
 # Optional: Wait for all threads to complete
 for t in threads:
     t.join()
+
 
