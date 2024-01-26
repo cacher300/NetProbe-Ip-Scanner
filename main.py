@@ -1,6 +1,7 @@
 import socket
 import ipaddress
 
+
 def get_local_ip():
     # Connect to impossible ip to get our ip
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
