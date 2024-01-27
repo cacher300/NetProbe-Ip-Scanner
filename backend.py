@@ -2,8 +2,26 @@ import socket
 import ipaddress
 import threading
 from queue import Queue
-import csv
 import sys
+import sqlite3
+
+def setup_database():
+    conn = sqlite3.connect('scan_results.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS scan_results
+                 (ip_address TEXT, port INTEGER, status TEXT)''')
+    conn.commit()
+    conn.close()
+
+
+# Function to insert scan results into the database
+def insert_scan_result(ip, port, status):
+    conn = sqlite3.connect('scan_results.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO scan_results (ip_address, port, status) VALUES (?, ?, ?)",
+              (ip, port, status))
+    conn.commit()
+    conn.close()
 
 
 def get_local_ip():
@@ -32,18 +50,22 @@ def scan_port(ip, port):
         return None
 
 
-def threader():
+def threader(port_list):
     while True:
-        worker = q.get()
-        result = scan_port(worker, 80)
-        if result:
-            results_queue.put(result)
-        q.task_done()
+        for item in port_list:
+            port = port_list[i]
+            worker = q.get()
+            result = scan_port(worker, port)
+            if result:
+                results_queue.put(result)
+            q.task_done()
 
 
-def start_local_scan(threads_num):
+def start_local_scan(threads_num, port_list):
+    setup_database()  # Set up the database and table
+
     for _ in range(threads_num):
-        t = threading.Thread(target=threader)
+        t = threading.Thread(target=threader, args=port_list)
         t.daemon = True
         t.start()
         threads.append(t)
@@ -55,12 +77,9 @@ def start_local_scan(threads_num):
 
     q.join()
 
-    with open("open_ports.csv", mode="w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["IP Address", "Port", "Status"])
-
-        while not results_queue.empty():
-            writer.writerow(results_queue.get())
+    while not results_queue.empty():
+        ip, port, status = results_queue.get()
+        insert_scan_result(ip, port, status)
 
     for t in threads:
         t.join()
@@ -69,9 +88,15 @@ def start_local_scan(threads_num):
 scan_type = sys.argv[1]
 num_threads = sys.argv[2]
 ip_range = sys.argv[3]
+length = sys.argv[4]
+
+port_list = []
+i = 0
+while i < int(length):
+    port_list.append(sys.argv[i+4])
 
 q = Queue()
 results_queue = Queue()
 threads = []
 
-start_local_scan(num_threads)
+start_local_scan(int(num_threads))

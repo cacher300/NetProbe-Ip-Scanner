@@ -8,11 +8,17 @@ def index():
     if request.method == 'POST':
         scan_type = request.form.get('scan_type')
         threads = int(request.form.get('threads'))
+        ports = request.form.get('ports')
         ip_range = request.form.get('ip_range')
+
         ip_range = '' if ip_range is None else ip_range
 
+        port_list = ports.split(',')
+        port_list = [port.strip() for port in port_list]
+        length = len(port_list)
+
         print(f"Scan Type: {scan_type}, Threads: {threads}, IP Range: {ip_range}")
-        subprocess.run(['python', 'backend.py', scan_type, str(threads), ip_range], check=True)
+        subprocess.run(['python', 'backend.py', scan_type, str(threads), ip_range, str(length)] + port_list, check=True)
 
         return redirect(url_for('index'))
 
