@@ -1,1 +1,39 @@
-filthy nigga
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Scanner</title>
+</head>
+<body>
+    <h1>Network Scanner Settings</h1>
+    <form method="POST">
+        <label for="scan_type">Select Scan Type:</label>
+        <select name="scan_type" id="scan_type" onchange="toggleIPRange(this)">
+            <option value="local_network">Local Network</option>
+            <option value="ip_range">IP Range</option>
+        </select>
+        <br>
+        <label for="threads">Number of Threads:</label>
+        <input type="number" id="threads" name="threads" min="1" value="1">
+        <br>
+        <div id="ip_range_input" style="display: none;">
+            <label for="ip_range">IP Range:</label>
+            <input type="text" id="ip_range" name="ip_range">
+        </div>
+        <br>
+        <input type="submit" value="Start Scan">
+    </form>
+
+    <script>
+        function toggleIPRange(select) {
+            var ipRangeInput = document.getElementById('ip_range_input');
+            if (select.value === 'ip_range') {
+                ipRangeInput.style.display = 'block';
+            } else {
+                ipRangeInput.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
