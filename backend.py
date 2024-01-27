@@ -3,6 +3,7 @@ import ipaddress
 import threading
 from queue import Queue
 import csv
+import sys
 
 
 def get_local_ip():
@@ -40,8 +41,8 @@ def threader():
         q.task_done()
 
 
-def start_local_scan():
-    for _ in range(num_threads):
+def start_local_scan(threads_num):
+    for _ in range(threads_num):
         t = threading.Thread(target=threader)
         t.daemon = True
         t.start()
@@ -65,7 +66,12 @@ def start_local_scan():
         t.join()
 
 
+scan_type = sys.argv[1]
+num_threads = sys.argv[2]
+ip_range = sys.argv[3]
+
 q = Queue()
 results_queue = Queue()
 threads = []
-num_threads = 500
+
+start_local_scan(num_threads)
