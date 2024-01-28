@@ -4,24 +4,7 @@ import threading
 from queue import Queue
 import sys
 import sqlite3
-
-def setup_database():
-    conn = sqlite3.connect('scan_results.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS scan_results
-                 (ip_address TEXT, port INTEGER, status TEXT)''')
-    conn.commit()
-    conn.close()
-
-
-# Function to insert scan results into the database
-def insert_scan_result(ip, port, status):
-    conn = sqlite3.connect('scan_results.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO scan_results (ip_address, port, status) VALUES (?, ?, ?)",
-              (ip, port, status))
-    conn.commit()
-    conn.close()
+import csv
 
 
 def get_local_ip():
@@ -50,22 +33,19 @@ def scan_port(ip, port):
         return None
 
 
-def threader(port_list):
+def threader():
     while True:
-        for item in port_list:
-            port = port_list[i]
-            worker = q.get()
+        worker = q.get()
+        for port in port_list:  # Iterate over each port in port_list
             result = scan_port(worker, port)
             if result:
                 results_queue.put(result)
-            q.task_done()
+        q.task_done()
 
 
-def start_local_scan(threads_num, port_list):
-    setup_database()  # Set up the database and table
-
+def start_local_scan(threads_num):
     for _ in range(threads_num):
-        t = threading.Thread(target=threader, args=port_list)
+        t = threading.Thread(target=threader)
         t.daemon = True
         t.start()
         threads.append(t)
@@ -77,23 +57,31 @@ def start_local_scan(threads_num, port_list):
 
     q.join()
 
-    while not results_queue.empty():
-        ip, port, status = results_queue.get()
-        insert_scan_result(ip, port, status)
+    with open("open_ports.csv", mode="w", newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["IP Address", "Port", "Status"])
+
+        while not results_queue.empty():
+            writer.writerow(results_queue.get())
 
     for t in threads:
         t.join()
 
 
 scan_type = sys.argv[1]
-num_threads = sys.argv[2]
+num_threads = int(sys.argv[2])
 ip_range = sys.argv[3]
-length = sys.argv[4]
+length = int(sys.argv[4])
+
 
 port_list = []
 i = 0
 while i < int(length):
     port_list.append(sys.argv[i+4])
+    i += 1
+
+port_list = [int(sys.argv[i + 5]) for i in range(length)]
+
 
 q = Queue()
 results_queue = Queue()
