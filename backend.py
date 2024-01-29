@@ -5,6 +5,7 @@ from queue import Queue
 import sys
 import sqlite3
 import csv
+from sql_setup import setup_database, insert_scan_result
 
 
 def get_local_ip():
@@ -22,13 +23,13 @@ def get_ip_range():
     return [str(ip) for ip in network.hosts()]
 
 
-def scan_port(ip, port):
+def scan_port(ip, port, timeout=3):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
+        s.settimeout(timeout)
         s.connect((ip, port))
         s.close()
-        return ip, port, "Open"
+        return ip, port
     except (socket.timeout, socket.error):
         return None
 
@@ -36,14 +37,16 @@ def scan_port(ip, port):
 def threader():
     while True:
         worker = q.get()
-        for port in port_list:  # Iterate over each port in port_list
-            result = scan_port(worker, port)
+        for port in port_list:
+            result = scan_port(worker, port, timeout=3)
             if result:
                 results_queue.put(result)
         q.task_done()
 
 
 def start_local_scan(threads_num):
+    setup_database()  # Set up the database and table
+
     for _ in range(threads_num):
         t = threading.Thread(target=threader)
         t.daemon = True
@@ -57,16 +60,13 @@ def start_local_scan(threads_num):
 
     q.join()
 
-    with open("open_ports.csv", mode="w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["IP Address", "Port", "Status"])
-
-        while not results_queue.empty():
-            writer.writerow(results_queue.get())
+    while not results_queue.empty():
+        ip, port = results_queue.get()
+        insert_scan_result(ip, port)
 
     for t in threads:
         t.join()
-
+    print("DONE")
 
 scan_type = sys.argv[1]
 num_threads = int(sys.argv[2])

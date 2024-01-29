@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 import subprocess
+from sql_setup import get_db_data
 app = Flask(__name__)
 
 
@@ -20,9 +21,15 @@ def index():
         print(f"Scan Type: {scan_type}, Threads: {threads}, IP Range: {ip_range}")
         subprocess.run(['python', 'backend.py', scan_type, str(threads), ip_range, str(length)] + port_list, check=True)
 
-        return redirect(url_for('index'))
+        return redirect(url_for('table'))
 
     return render_template('index.html')
+
+
+@app.route('/table')
+def table():
+    data = get_db_data()
+    return render_template('table.html', data=data)
 
 
 if __name__ == '__main__':
