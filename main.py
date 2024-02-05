@@ -16,9 +16,18 @@ def index():
 
         ip_range = '' if ip_range is None else ip_range
 
-        port_list = ports.split(',')
-        port_list = [port.strip() for port in port_list]
+        initial_list = ports.split(',')
+        port_list = []
+
+        for port in initial_list:
+            if '-' in port:
+                start, end = map(int, port.split('-'))
+                port_list.extend(range(start, end + 1))
+            else:
+                port_list.append(int(port))
         length = len(port_list)
+
+        port_list = [str(port) for port in port_list]
 
         print(f"Scan Type: {scan_type}, Threads: {threads}, IP Range: {ip_range}")
         subprocess.run(['python', 'backend.py', scan_type, str(threads), ip_range, str(length)] + port_list, check=True)
