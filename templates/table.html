@@ -41,6 +41,22 @@
             font-weight: bold;
             color: #009879;
         }
+
+        /* Button styles */
+        a {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #009879;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #007961;
+        }
     </style>
 </head>
 <body>
@@ -62,8 +78,8 @@
             {% endfor %}
         </tbody>
     </table>
-<a href="/download">Download Data</a>
-<a href="/wipe" onclick="return confirm('Are you sure you want to wipe the database? This action cannot be undone.');">Wipe Database</a>
-
+    <a href="/download">Download Data</a>
+    <a href="/wipe" onclick="return confirm('Are you sure you want to wipe the database? This action cannot be undone.');">Wipe Database</a>
+    <a href="/">HOME</a>
 </body>
 </html>

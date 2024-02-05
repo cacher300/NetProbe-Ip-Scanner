@@ -61,7 +61,7 @@ def download():
 
     with open(csv_file_path, 'w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(['ID', 'IP Address', 'Ports Open'])  # Column headers
+        csv_writer.writerow(['ID', 'IP Address', 'Ports Open'])
         for row in data:
             csv_writer.writerow(row)
 
@@ -75,14 +75,14 @@ def wipe_database():
     conn = sqlite3.connect('scan_results.db')
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM open_ports")  # Replace 'port_table' with your actual table name for ports
+    cursor.execute("DELETE FROM open_ports")
 
     cursor.execute("DELETE FROM ip_addresses")
 
     conn.commit()
     conn.close()
 
-    return "Database wiped successfully."
+    return redirect(url_for('table'))
 
 
 if __name__ == '__main__':
