@@ -7,7 +7,6 @@ import sys
 import time
 from sql_setup import setup_database, insert_scan_result
 
-# Global event to signal threads to stop
 stop_event = threading.Event()
 
 def get_local_ip():
@@ -37,7 +36,7 @@ def threader():
     while not stop_event.is_set():
         try:
             worker = q.get(timeout=0.5)
-        except queue.Empty:  # Correct reference to the Empty exception
+        except queue.Empty:
             continue
 
         for port in port_list:
@@ -50,7 +49,7 @@ def threader():
 
 
 def start_local_scan(threads_num):
-    setup_database()  # Set up the database and table
+    setup_database()
 
     for _ in range(threads_num):
         t = threading.Thread(target=threader)

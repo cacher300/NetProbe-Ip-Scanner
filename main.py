@@ -30,7 +30,7 @@ def index():
         port_list = [str(port) for port in port_list]
 
         print(f"Scan Type: {scan_type}, Threads: {threads}, IP Range: {ip_range}")
-        subprocess.run(['python', 'backend.py', scan_type, str(threads), ip_range, str(length)] + port_list, check=True)
+        subprocess.run(['python', 'local.py', scan_type, str(threads), ip_range, str(length)] + port_list, check=True)
 
         return redirect(url_for('table'))
 
