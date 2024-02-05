@@ -45,17 +45,19 @@ def insert_scan_result(ip, port):
         conn = sqlite3.connect('scan_results.db')
         c = conn.cursor()
 
-        # Insert IP address if not exists
         c.execute("INSERT OR IGNORE INTO ip_addresses (ip_address) VALUES (?)", (ip,))
         conn.commit()
 
-        # Get IP address ID
         c.execute("SELECT id FROM ip_addresses WHERE ip_address = ?", (ip,))
         ip_id = c.fetchone()[0]
 
-        # Insert port
-        c.execute("INSERT INTO open_ports (ip_id, port) VALUES (?, ?)", (ip_id, port))
-        conn.commit()
+        c.execute("SELECT * FROM open_ports WHERE ip_id = ? AND port = ?", (ip_id, port))
+        if not c.fetchone():
+            c.execute("INSERT INTO open_ports (ip_id, port) VALUES (?, ?)", (ip_id, port))
+            conn.commit()
+        else:
+            print(f"Port {port} already exists for IP {ip}, skipping insertion.")
+
     except sqlite3.Error as e:
         print(f"Database error: {e}")
     finally:
