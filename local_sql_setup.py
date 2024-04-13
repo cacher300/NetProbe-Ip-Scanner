@@ -3,7 +3,7 @@ import sqlite3
 
 def get_db_data():
     try:
-        conn = sqlite3.connect('scan_results.db')
+        conn = sqlite3.connect('local_scan_results.db')
         cur = conn.cursor()
         cur.execute("""
         SELECT ip_addresses.ip_address, GROUP_CONCAT(DISTINCT open_ports.port) as ports

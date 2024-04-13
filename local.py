@@ -5,7 +5,7 @@ import threading
 from queue import Queue
 import sys
 import time
-from sql_setup import setup_database, insert_scan_result
+from local_sql_setup import setup_database, insert_scan_result
 
 stop_event = threading.Event()
 
@@ -84,6 +84,8 @@ scan_type = sys.argv[1]
 num_threads = int(sys.argv[2])
 ip_range = sys.argv[3]
 length = int(sys.argv[4])
+
+
 
 port_list = []
 i = 0
