@@ -1,5 +1,8 @@
-ID,IP Address,Ports Open
-1,192.168.0.1,"80, 443"
-2,192.168.0.24,80
-3,192.168.0.28,80
-4,192.168.0.26,80
+ID,IP Address,Ports Open,Name,Type,OS,Mac Address
+1,192.168.0.54,"80, 443",SynologyNAS.hitronhub.home,"Manufacturer: Cisco-Li, Description: Cisco-Linksys, LLC",Linux machine or device,c8:b3:73:3e:23:bb
+2,192.168.0.1,"80, 443",puma7-atom,"Manufacturer: None, Description: None",Linux machine or device,fa:1d:0f:8e:82:41
+3,192.168.0.44,80,NA,"Manufacturer: SichuanA, Description: Sichuan AI-Link Technology Co., Ltd.",Linux machine or device,40:24:b2:cb:4c:0b
+4,192.168.0.78,80,bobcatminer.hitronhub.home,"Manufacturer: AzureWav, Description: AzureWave Technology Inc.",Linux machine or device,48:e7:da:64:9d:55
+5,192.168.0.24,80,qsdk.hitronhub.home,"Manufacturer: SichuanA, Description: Sichuan AI-Link Technology Co., Ltd.",Linux machine or device,40:24:b2:c5:0f:6c
+6,192.168.0.28,80,NA,"Manufacturer: SichuanA, Description: Sichuan AI-Link Technology Co., Ltd.",Linux machine or device,40:24:b2:c5:3c:94
+7,192.168.0.45,80,SYNOLOGYNAS,"Manufacturer: Cisco-Li, Description: Cisco-Linksys, LLC",Linux machine or device,c8:b3:73:3e:23:bb

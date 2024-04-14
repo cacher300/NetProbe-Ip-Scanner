@@ -1,12 +1,12 @@
 import sqlite3
 
 
-def get_db_data():
+def get_world_db_data():
     try:
         conn = sqlite3.connect('world_scan_results.db')
         cur = conn.cursor()
         cur.execute("""
-        SELECT ip_addresses.ip_address, ip_addresses.location, ip_addresses.weather, ip_addresses.ip_lookup, GROUP_CONCAT(DISTINCT open_ports.port) as ports
+        SELECT ip_addresses.ip_address, ip_addresses.location, ip_addresses.ip_lookup, GROUP_CONCAT(DISTINCT open_ports.port) as ports
         FROM ip_addresses
         JOIN open_ports ON ip_addresses.id = open_ports.ip_id
         GROUP BY ip_addresses.ip_address
@@ -27,7 +27,6 @@ def setup_database():
                         id INTEGER PRIMARY KEY,
                         ip_address TEXT UNIQUE,
                         location TEXT,
-                        weather TEXT,
                         ip_lookup TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS open_ports (
                         id INTEGER PRIMARY KEY,
