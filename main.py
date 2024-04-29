@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, send_file,
 import subprocess
 from local_sql_setup import get_local_db_data
 from world_sql_setup import get_world_db_data
-import sqlite3
 import csv
 from ipaddress import ip_network, IPv4Address
 import tempfile
@@ -10,6 +9,7 @@ import sys
 import pandas as pd
 import jsonify
 import sqlite3
+import webbrowser
 app = Flask(__name__)
 
 DATABASE = 'ip_ranges.db'
@@ -214,6 +214,8 @@ def table(name):
     return render_template('table.html', name=name, data=data)
 
 
-
 if __name__ == '__main__':
+    url = 'http://127.0.0.1:5000/'
+    webbrowser.open(url)
     app.run(debug=True)
+
