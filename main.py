@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, g
 import subprocess
 from local_sql_setup import get_local_db_data
 from world_sql_setup import get_world_db_data
@@ -7,7 +7,17 @@ import csv
 from ipaddress import ip_network, IPv4Address
 import tempfile
 import sys
+import pandas as pd
+import jsonify
+import sqlite3
 app = Flask(__name__)
+
+DATABASE = 'ip_ranges.db'
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -64,6 +74,15 @@ def index():
 
     return render_template('index.html')
 
+
+@app.route('/get_ip_blocks')
+def get_ip_blocks():
+    # Load your CSV file
+    df = pd.read_csv('path_to_your_csv_file.csv')
+    # Assuming you need to send country and blocks data
+    # Convert DataFrame to dictionary
+    result = df.groupby('country')['start of block', 'end of block'].apply(lambda x: x.to_dict(orient='records')).to_dict()
+    return jsonify(result)
 
 @app.route('/world_table')
 def world_table():
@@ -167,6 +186,33 @@ def world_wipe_database():
     conn.close()
 
     return redirect(url_for('world_table'))
+
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+
+@app.route('/directory')
+def directory():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = cursor.fetchall()
+    return render_template('directory.html', tables=tables)
+
+
+@app.route('/table/<name>')
+def table(name):
+    db = get_db()
+    cursor = db.cursor()
+    query = f"SELECT * FROM {name}"
+    cursor.execute(query)
+    data = cursor.fetchall()
+    return render_template('table.html', name=name, data=data)
+
 
 
 if __name__ == '__main__':

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Select IP Block</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+    // Fetch the IP block data on page load
+    $.getJSON('/get_ip_blocks', function(data) {
+        $.each(data, function(key, value) {
+            $('#country-selector').append($('<option></option>').attr('value', key).text(key));
+        });
+    });
+
+    // Update blocks selector when country selector changes
+    $('#country-selector').change(function() {
+        var country = $(this).val();
+        var blocks = data[country];
+        $('#block-selector').empty();
+        $.each(blocks, function(index, block) {
+            $('#block-selector').append($('<option></option>').text(block['start of block'] + ' - ' + block['end of block']));
+        });
+    });
+});
+</script>
+</head>
+<body>
+    <select id="country-selector">
+        <option>Select a Country</option>
+    </select>
+    <select id="block-selector">
+        <option>Select an IP Block</option>
+    </select>
+</body>
+</html>

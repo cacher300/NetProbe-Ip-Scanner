@@ -9,10 +9,10 @@ from scapy.layers.inet import IP, ICMP
 import manuf
 import nmap
 import socket
+import time
 
 
 stop_event = threading.Event()
-
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -21,13 +21,11 @@ def get_local_ip():
     s.close()
     return ip
 
-
 def get_ip_range():
     local_ip = get_local_ip()
     ip_with_mask = str(local_ip) + "/24"
     network = ipaddress.ip_network(ip_with_mask, strict=False)
     return [str(ip) for ip in network.hosts()]
-
 
 def scan_port(ip, port, timeout=3):
     try:
@@ -35,17 +33,15 @@ def scan_port(ip, port, timeout=3):
         s.settimeout(timeout)
         s.connect((ip, port))
         s.close()
-        return ip, port
+        return True, (ip, port)
     except (socket.timeout, socket.error):
-        return None
-
+        return False, None
 
 def is_ip_alive(ip):
     conf.verb = 0
     icmp = IP(dst=ip)/ICMP()
     response = sr1(icmp, timeout=1, verbose=0)
     return response is not None
-
 
 def check_ip(ip):
     if is_ip_alive(ip):
@@ -59,32 +55,33 @@ def check_ip(ip):
         os = detect_device_type(ip)
         insert_scan_result(ip, 'NA', name, device_type, os, mac_address, 'Alive')
 
-
 def threaded_ip_check(ip_list):
     threads = []
     for ip in ip_list:
         thread = threading.Thread(target=check_ip, args=(ip,))
         threads.append(thread)
         thread.start()
-
     for thread in threads:
         thread.join()
-
 
 def threader():
     while not stop_event.is_set():
         try:
-            worker = q.get(timeout=0.5)
+            worker = q.get(timeout=1)  # Adjust timeout as needed
         except Empty:
+            #print("Queue is empty, thread is idling...")
             continue
-
-        for port in port_list:
-            if stop_event.is_set():
-                break
-            result = scan_port(worker, port, timeout=3)
-            if result:
-                results_queue.put(result)
-        q.task_done()
+        try:
+            for port in port_list:
+                if stop_event.is_set():
+                    print(f"Stopping as flagged. Current IP: {worker}")
+                    break
+                success, result = scan_port(worker, port)
+                if success:
+                    results_queue.put(result)
+        finally:
+            q.task_done()
+            print(f"Task done for {worker}")
 
 
 def start_local_scan(threads_num):
@@ -95,43 +92,46 @@ def start_local_scan(threads_num):
         t = threading.Thread(target=threader)
         t.daemon = True
         t.start()
-        print('1')
         threads.append(t)
-        print('2')
+    print("1")
 
     ip_list = get_ip_range()
-
     for ip in ip_list:
-        print('3')
         q.put(ip)
+    print("2")
 
     q.join()
-    print('4')
     stop_event.set()
+    print("3")
 
     while not results_queue.empty():
         ip, port = results_queue.get()
-
         mac_address = get_mac(ip)
         name = get_hostname(ip)
         info = get_device_info(mac_address)
         device_type = detect_device_type(ip)
-
         has_open.append(ip)
         insert_scan_result(ip, port, name, device_type, info, mac_address, 'Open')
+    print("4")
 
     for t in threads:
         t.join()
+    print("5")
 
     maybe_dead = {x for x in ip_list if x not in has_open}
     threaded_ip_check(maybe_dead)
+    print("6")
 
     print("DONE")
 
 
 def detect_device_type(ip_address):
     scanner = nmap.PortScanner()
-    scanner.scan(ip_address, arguments='-O')
+    try:
+        scanner.scan(ip_address, arguments='-O')
+    except nmap.PortScannerError as e:
+        return f"Scan error: {str(e)}"
+
     if ip_address not in scanner.all_hosts():
         return "Host unavailable"
 
@@ -143,20 +143,17 @@ def detect_device_type(ip_address):
         for osmatch in host['osmatch']:
             guess = f"OS Guess: {osmatch['name']}, Accuracy: {osmatch['accuracy']}%"
             output.append(guess)
-            # You can infer device types by the name of the OS
-            if 'windows' in osmatch['name'].lower():
+            name_lower = osmatch['name'].lower()
+            if 'windows' in name_lower:
                 device_type = "Windows PC or Server"
-            elif 'linux' in osmatch['name'].lower():
+            elif 'linux' in name_lower:
                 device_type = "Linux machine or device"
-            elif 'android' in osmatch['name'].lower():
+            elif 'android' in name_lower:
                 device_type = "Android Phone"
-            elif 'iphone' in osmatch['name'].lower():
+            elif 'iphone' in name_lower:
                 device_type = "iPhone"
 
-    if output:
-        return f"{device_type}. " + " ".join(output)
-    else:
-        return device_type
+    return f"{device_type}. " + " ".join(output) if output else device_type
 
 
 def get_mac(ip):
@@ -164,18 +161,24 @@ def get_mac(ip):
     broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast / arp_request
 
-    answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
-
-    return answered_list[0][1].hwsrc if answered_list else "NA"
+    try:
+        answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+        return answered_list[0][1].hwsrc if answered_list else "NA"
+    except Exception as e:
+        return f"Error retrieving MAC: {str(e)}"
 
 
 def get_device_info(mac_address):
+    if mac_address == "NA":
+        return "MAC address not available"
+
     p = manuf.MacParser()
-
-    manufacturer = p.get_manuf(mac_address)
-    description = p.get_manuf_long(mac_address)
-
-    return f"Manufacturer: {manufacturer}, Description: {description}"
+    try:
+        manufacturer = p.get_manuf(mac_address)
+        description = p.get_manuf_long(mac_address)
+        return f"Manufacturer: {manufacturer}, Description: {description}"
+    except ValueError as e:
+        return f"Error: {str(e)}"
 
 
 def get_hostname(ip_address):
@@ -183,7 +186,7 @@ def get_hostname(ip_address):
         hostname = socket.gethostbyaddr(ip_address)[0]
         return hostname
     except socket.herror:
-        return "NA"
+        return "Hostname not available"
 
 
 q = Queue()
@@ -195,6 +198,8 @@ num_threads = int(sys.argv[2])
 ip_range = sys.argv[3]
 length = int(sys.argv[4])
 
+print(num_threads)
+
 
 port_list = []
 i = 0
@@ -204,8 +209,12 @@ while i < int(length):
 
 port_list = [int(sys.argv[i + 5]) for i in range(length)]
 
+print(port_list)
 q = Queue()
 results_queue = Queue()
 threads = []
-
-start_local_scan(int(num_threads))
+print("hello")
+start_time = time.time()  # Record the start time
+start_local_scan(num_threads)  # Assume sys.argv[2] is the number of threads
+end_time = time.time()  # Record the end time
+print(f"Total time taken: {end_time - start_time} seconds")
