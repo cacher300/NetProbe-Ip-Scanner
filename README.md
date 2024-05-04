@@ -28,7 +28,8 @@ An IP Scanner tool that scans both local and public IP addresses, storing all th
 
 1. [Installation](#installation)
 2. [Usage](#usage)
-4. [Database Schema](#database-schema)
+3. [Database Schema](#database-schema)
+4. [Versions](#versions)
 5. [License](#license)
 
 ## Installation
@@ -81,6 +82,12 @@ The scanner stores its results in a SQL database with the following schema:
 | info           | TEXT      | Additional information       |
 | mac_address    | VARCHAR   | The MAC address              |
 | status         | VARCHAR   | Status of the IP             |
+
+## Versions
+
+
+0.2 Created basic Flask site
+0.1 Created local scan script
 
 ## License
 
