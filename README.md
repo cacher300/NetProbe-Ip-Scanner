@@ -40,6 +40,7 @@ An IP Scanner tool that scans both local and public IP addresses, storing all th
 - Windows
 
 ### Installing
+You can download the official latest release [here](https://github.com/cacher300/ip-scanner/releases/tag/stable) or compile it yourlsef.
 
 Clone the repository:
 
@@ -66,7 +67,6 @@ To start the IP scanner, run:
 ```bash
 python main.py
 ```
-Than open http://127.0.0.1:5000/ in your prefered browser
 
 ## Database Schema
 
