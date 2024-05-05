@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; /* Sets the font for the body */
+            background-color: #f4f4f4; /* Light grey background */
+            margin: 40px; /* Adds margin around the content */
+            color: #333; /* Dark grey text color */
+        }
+        h1 {
+            color: #008000;
+            text-align: center/* Green color for the heading */
+        }
+        ul {
+            display: flex; /* Uses Flexbox for layout */
+            flex-wrap: wrap; /* Allows items to wrap onto the next line */
+            list-style-type: none; /* Removes bullet points from the list */
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            flex: 1 0 30%; /* Flex item occupies about 30% of the space */
+            box-sizing: border-box; /* Includes padding and border in the element's total width and height */
+            padding: 8px;
+            margin: 10px; /* Spacing between items */
+            background-color: #fff; /* White background for list items */
+            border: 1px solid #ddd; /* Light grey border */
+            text-align: center; /* Centers text inside list items */
+        }
+        li:hover {
+            background-color: #e9e9e9; /* Changes background on hover */
+        }
+        a {
+            text-decoration: none; /* Removes underline from links */
+            color: #008000; /* Green color for links */
+        }
+        a:hover {
+            color: #00cc00; /* Lighter green color for links on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Table List</h1>
+    <ul>
+        {% for table in tables %}
+        <li><a href="{{ url_for('table', name=table[0]) }}">{{ table[0] }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

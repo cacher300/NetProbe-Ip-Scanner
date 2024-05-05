@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def get_local_db_data():
     conn = None
     try:
@@ -18,6 +19,7 @@ def get_local_db_data():
     finally:
         if conn:
             conn.close()
+
 
 def setup_database():
     conn = None
@@ -48,18 +50,17 @@ def setup_database():
         if conn:
             conn.close()
 
+
 def insert_scan_result(ip, port, name=None, type=None, os=None, mac_address=None, status=None):
     conn = None
     try:
         conn = sqlite3.connect('local_scan_results.db')
         c = conn.cursor()
 
-        # Insert or ignore new IP address entry
         c.execute("INSERT OR IGNORE INTO ip_addresses (ip_address, name, type, os, mac_address, status) VALUES (?, ?, ?, ?, ?, ?)",
                   (ip, name, type, os, mac_address, status))
         conn.commit()
 
-        # Retrieve ID for the IP address
         c.execute("SELECT id FROM ip_addresses WHERE ip_address = ?", (ip,))
         ip_id = c.fetchone()
         if ip_id:

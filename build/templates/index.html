@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form, table {
+            background-color: #f2f2f2;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            display: none;
+            margin: auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .view-link {
+            display: none;
+            margin-top: 0px;
+            text-align: center;
+            width: 100%;
+        }
+        .view-link a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+            background-color: #f2f2f2;
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .view-link a:hover {
+            background-color: #45a049;
+            color: white;
+        }
+    </style>
+</head>
+<body onload="initializePage()">
+    <h1>Network Scanner Settings</h1>
+    <div class="loader" id="loader"></div>
+    <form method="POST" onsubmit="showSpinner()">
+        <label for="scan_type">Select Scan Type:</label>
+        <select name="scan_type" id="scan_type" onchange="toggleIPRange(this)">
+            <option value="local_network">Local Network</option>
+            <option value="ip_range">IP Range</option>
+        </select>
+        <br>
+        <label for="threads">Number of Threads:</label>
+        <input type="number" id="threads" name="threads" min="1" max="10000" value="1">
+        <br>
+        <label for="ports">Port(s):</label>
+        <input type="text" id="ports" name="ports" placeholder="e.g., 80, 443, 100-200">
+        <br>
+        <div id="ip_range_input">
+            <label for="ip_range">IP Range:</label>
+            <input type="text" id="ip_range" name="ip_range">
+            <div class="view-link" id="view_ip_blocks">
+                <a href="/directory">View Major IP Blocks to Scan</a>
+            </div>
+        </div>
+        <br>
+        <input type="submit" value="Start Scan">
+    </form>
+    <table>
+        <tr>
+            <th>Common Port Numbers</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>20, 21</td>
+            <td>FTP (File Transfer Protocol) - Data and control</td>
+        </tr>
+        <tr>
+            <td>22</td>
+            <td>SSH (Secure Shell) - Secure logins, file transfers (scp, sftp) and port forwarding</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>TELNET - Unencrypted text communications</td>
+        </tr>
+        <tr>
+            <td>25</td>
+            <td>SMTP (Simple Mail Transfer Protocol) - Email routing</td>
+        </tr>
+        <tr>
+            <td>53</td>
+            <td>DNS (Domain Name System)</td>
+        </tr>
+        <tr>
+            <td>80</td>
+            <td>HTTP (Hypertext Transfer Protocol) - Standard web communication</td>
+        </tr>
+        <tr>
+            <td>110</td>
+            <td>POP3 (Post Office Protocol) - Email retrieval</td>
+        </tr>
+        <tr>
+            <td>143</td>
+            <td>IMAP (Internet Message Access Protocol) - Email retrieval</td>
+        </tr>
+        <tr>
+            <td>443</td>
+            <td>HTTPS (HTTP Secure) - Encrypted web communication</td>
+        </tr>
+        <tr>
+            <td>3389</td>
+            <td>RDP (Remote Desktop Protocol) - Remote desktop access</td>
+        </tr>
+        <tr>
+            <td>3306</td>
+            <td>MySQL - Default database management system port</td>
+        </tr>
+        <tr>
+            <td>1433</td>
+            <td>Microsoft SQL Server - Database management system port</td>
+        </tr>
+        <tr>
+            <td>5900</td>
+            <td>VNC (Virtual Network Computing) - Remote desktop access</td>
+        </tr>
+        <tr>
+            <td>5060, 5061</td>
+            <td>SIP (Session Initiation Protocol) - VoIP signaling</td>
+        </tr>
+
+
+    </table>
+
+    <script>
+        function toggleIPRange(select) {
+            var ipRangeInput = document.getElementById('ip_range_input');
+            var viewLink = document.getElementById('view_ip_blocks');
+            if (select.value === 'ip_range') {
+                ipRangeInput.style.display = 'block';
+                viewLink.style.display = 'block'; // Show the hyperlink
+            } else {
+                ipRangeInput.style.display = 'none';
+                viewLink.style.display = 'none'; // Hide the hyperlink
+            }
+        }
+
+        function initializePage() {
+            // Run toggleIPRange on page load based on the selected option
+            var selectedScanType = document.getElementById('scan_type');
+            toggleIPRange(selectedScanType);
+        }
+
+        function showSpinner() {
+            document.getElementById('loader').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
