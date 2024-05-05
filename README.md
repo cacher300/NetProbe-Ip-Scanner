@@ -85,9 +85,12 @@ The scanner stores its results in a SQL database with the following schema:
 
 ## Versions
 
-
-0.2 Created basic Flask site
-0.1 Created local scan script
+1.6 Major bugfixes and efficiency increases (First stable release I will be providing)
+1.5 Added world ip database
+1.4 Transferd all databases to SQL
+1.3 Added world scan feature
+1.2 Added basic Flask GUI
+1.1 Added local scan script
 
 ## License
 
