@@ -1,4 +1,4 @@
-# IP Scanner
+# NetProbe IP Scanner
 
 An IP Scanner tool that scans both local and public IP addresses, storing all the data in a SQL database. The scanner provides useful information such as:
 
