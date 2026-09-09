@@ -67,6 +67,9 @@
             margin: 0;
             transition: none;
         }
+        .wipe-form { display: inline-block; margin: 10px; }
+        .wipe-form input { padding: 9px; border: 1px solid #bbb; border-radius: 4px; }
+        .wipe-form button { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -99,7 +102,11 @@
 
     </table>
     <a href="/local_download" class="button">Download Data</a>
-    <a href="/local_wipe" class="button" onclick="return confirm('Are you sure you want to wipe the database? This action cannot be undone.');">Wipe Database</a>
+    <form method="post" action="{{ url_for('local_wipe_database') }}" class="wipe-form" onsubmit="return confirm('Are you sure you want to wipe the database? This action cannot be undone.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="password" name="admin_token" placeholder="Admin token" required>
+        <button type="submit" class="button">Wipe Database</button>
+    </form>
     <a href="/" class="button">HOME</a>
 </body>
 </html>

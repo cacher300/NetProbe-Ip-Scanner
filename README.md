@@ -60,6 +60,19 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+For local OS detection, install the Nmap application separately and ensure
+`nmap` is available on `PATH`; `python-nmap` is only the Python wrapper.
+
+Set an admin token before starting the app if you want to use the database
+wipe controls:
+
+```powershell
+$env:NETPROBE_ADMIN_TOKEN = "choose-a-long-random-value"
+```
+
+An optional `IPINFO_TOKEN` environment variable enables authenticated IP
+location lookups. The app no longer stores this token in source code.
+
 ## Usage
 
 To start the IP scanner, run:

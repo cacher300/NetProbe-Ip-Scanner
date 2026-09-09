@@ -47,7 +47,7 @@
     <h1>Table List</h1>
     <ul>
         {% for table in tables %}
-        <li><a href="{{ url_for('table', name=table[0]) }}">{{ table[0] }}</a></li>
+        <li><a href="{{ url_for('table', name=table) }}">{{ table }}</a></li>
         {% endfor %}
     </ul>
 </body>

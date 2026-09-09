@@ -6,9 +6,11 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
 $(document).ready(function(){
+    var ipBlocks = {};
     // Fetch the IP block data on page load
     $.getJSON('/get_ip_blocks', function(data) {
-        $.each(data, function(key, value) {
+        ipBlocks = data;
+        $.each(ipBlocks, function(key, value) {
             $('#country-selector').append($('<option></option>').attr('value', key).text(key));
         });
     });
@@ -16,7 +18,7 @@ $(document).ready(function(){
     // Update blocks selector when country selector changes
     $('#country-selector').change(function() {
         var country = $(this).val();
-        var blocks = data[country];
+        var blocks = ipBlocks[country] || [];
         $('#block-selector').empty();
         $.each(blocks, function(index, block) {
             $('#block-selector').append($('<option></option>').text(block['start of block'] + ' - ' + block['end of block']));

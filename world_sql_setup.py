@@ -1,66 +1,93 @@
 import sqlite3
+from pathlib import Path
+
+
+DATABASE = Path(__file__).resolve().parent / "world_scan_results.db"
+
+
+def _connect():
+    conn = sqlite3.connect(DATABASE, timeout=30)
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 
 def get_world_db_data():
+    conn = _connect()
     try:
-        conn = sqlite3.connect('world_scan_results.db')
-        cur = conn.cursor()
-        cur.execute("""
-        SELECT ip_addresses.ip_address, ip_addresses.location, ip_addresses.ip_lookup, GROUP_CONCAT(DISTINCT open_ports.port) as ports
-        FROM ip_addresses
-        JOIN open_ports ON ip_addresses.id = open_ports.ip_id
-        GROUP BY ip_addresses.ip_address
-        """)
-        data = cur.fetchall()
-        return data
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
+        return conn.execute(
+            """
+            SELECT ip_addresses.ip_address, ip_addresses.location,
+                   ip_addresses.ip_lookup,
+                   GROUP_CONCAT(DISTINCT open_ports.port) AS ports
+            FROM ip_addresses
+            LEFT JOIN open_ports ON ip_addresses.id = open_ports.ip_id
+            GROUP BY ip_addresses.id
+            """
+        ).fetchall()
     finally:
         conn.close()
 
 
 def setup_database():
+    conn = _connect()
     try:
-        conn = sqlite3.connect('world_scan_results.db')
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS ip_addresses (
-                        id INTEGER PRIMARY KEY,
-                        ip_address TEXT UNIQUE,
-                        location TEXT,
-                        ip_lookup TEXT)''')
-        c.execute('''CREATE TABLE IF NOT EXISTS open_ports (
-                        id INTEGER PRIMARY KEY,
-                        ip_id INTEGER,
-                        port INTEGER,
-                        FOREIGN KEY (ip_id) REFERENCES ip_addresses(id))''')
-        conn.commit()
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
+        with conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS ip_addresses (
+                    id INTEGER PRIMARY KEY,
+                    ip_address TEXT UNIQUE,
+                    location TEXT,
+                    ip_lookup TEXT
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS open_ports (
+                    id INTEGER PRIMARY KEY,
+                    ip_id INTEGER NOT NULL,
+                    port INTEGER NOT NULL,
+                    FOREIGN KEY (ip_id) REFERENCES ip_addresses(id)
+                )
+                """
+            )
+            conn.execute(
+                """
+                DELETE FROM open_ports
+                WHERE id NOT IN (
+                    SELECT MIN(id) FROM open_ports GROUP BY ip_id, port
+                )
+                """
+            )
+            conn.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_world_open_ports_ip_port "
+                "ON open_ports(ip_id, port)"
+            )
     finally:
         conn.close()
 
 
 def insert_scan_result(ip, location, port, ip_lookup):
+    conn = _connect()
     try:
-        conn = sqlite3.connect('world_scan_results.db')
-        c = conn.cursor()
-
-        c.execute("INSERT OR IGNORE INTO ip_addresses (ip_address, location, ip_lookup) VALUES (?, ?, ?)", (ip, location, ip_lookup))
-        conn.commit()
-
-        c.execute("SELECT id FROM ip_addresses WHERE ip_address = ?", (ip,))
-        ip_id = c.fetchone()[0]
-
-        c.execute("SELECT * FROM open_ports WHERE ip_id = ? AND port = ?", (ip_id, port))
-        if not c.fetchone():
-            c.execute("INSERT INTO open_ports (ip_id, port) VALUES (?, ?)", (ip_id, port))
-            conn.commit()
-        else:
-            print(f"Port {port} already exists for IP {ip}, skipping insertion.")
-
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO ip_addresses (ip_address, location, ip_lookup)
+                VALUES (?, ?, ?)
+                ON CONFLICT(ip_address) DO UPDATE SET
+                    location = excluded.location,
+                    ip_lookup = excluded.ip_lookup
+                """,
+                (ip, location, ip_lookup),
+            )
+            ip_id = conn.execute(
+                "SELECT id FROM ip_addresses WHERE ip_address = ?", (ip,)
+            ).fetchone()[0]
+            conn.execute(
+                "INSERT OR IGNORE INTO open_ports (ip_id, port) VALUES (?, ?)",
+                (ip_id, port),
+            )
     finally:
         conn.close()
-
-

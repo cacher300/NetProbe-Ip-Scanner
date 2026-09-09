@@ -69,6 +69,14 @@
         th {
             background-color: #f2f2f2;
         }
+        .message {
+            max-width: 500px;
+            margin: 10px auto;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .message.error { background-color: #ffe0e0; color: #8b0000; }
+        .message.success { background-color: #e0f5e9; color: #176b3a; }
         .view-link {
             display: none;
             margin-top: 0px;
@@ -93,8 +101,14 @@
 </head>
 <body onload="initializePage()">
     <h1>Network Scanner Settings</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p class="message {{ category }}">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
     <div class="loader" id="loader"></div>
     <form method="POST" onsubmit="showSpinner()">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label for="scan_type">Select Scan Type:</label>
         <select name="scan_type" id="scan_type" onchange="toggleIPRange(this)">
             <option value="local_network">Local Network</option>
@@ -102,7 +116,7 @@
         </select>
         <br>
         <label for="threads">Number of Threads:</label>
-        <input type="number" id="threads" name="threads" min="1" max="10000" value="1">
+        <input type="number" id="threads" name="threads" min="1" max="128" value="1">
         <br>
         <label for="ports">Port(s):</label>
         <input type="text" id="ports" name="ports" placeholder="e.g., 80, 443, 100-200">

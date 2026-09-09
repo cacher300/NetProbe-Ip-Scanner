@@ -12,15 +12,27 @@ import time
 
 
 def run_local_scan(num_threads,ports):
+    try:
+        num_threads = int(num_threads)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("num_threads must be a whole number") from exc
+    if not 1 <= num_threads <= 128:
+        raise ValueError("num_threads must be between 1 and 128")
+    if not ports:
+        raise ValueError("At least one port is required")
+
     stop_event = threading.Event()
     q = Queue()
     results_queue = Queue()
     threads = []
 
     def get_local_ip():
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            s.connect(("10.255.255.255", 1))
-            return s.getsockname()[0]
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.connect(("10.255.255.255", 1))
+                return s.getsockname()[0]
+        except OSError:
+            return socket.gethostbyname(socket.gethostname())
 
     def get_ip_range():
         local_ip = get_local_ip()
@@ -37,9 +49,12 @@ def run_local_scan(num_threads,ports):
             return False, None
 
     def is_ip_alive(ip):
-        conf.verb = 0
-        response = sr1(IP(dst=ip)/ICMP(), timeout=1, verbose=0)
-        return response is not None
+        try:
+            conf.verb = 0
+            response = sr1(IP(dst=ip)/ICMP(), timeout=1, verbose=0)
+            return response is not None
+        except Exception:
+            return False
 
     def check_ip(ip):
         if is_ip_alive(ip):
@@ -48,7 +63,7 @@ def run_local_scan(num_threads,ports):
             name = get_hostname(ip)
             device_type = get_device_info(mac_address) if mac_address != 'NA' else 'NA'
             os = detect_device_type(ip)
-            insert_scan_result(ip, 'NA', name, device_type, os, mac_address, 'Alive')
+            insert_scan_result(ip, None, name, device_type, os, mac_address, 'Alive')
 
     def threaded_ip_check(ip_list):
         threads = [threading.Thread(target=check_ip, args=(ip,)) for ip in ip_list]
@@ -110,10 +125,10 @@ def run_local_scan(num_threads,ports):
         print("DONE")
 
     def detect_device_type(ip_address):
-        scanner = nmap.PortScanner()
         try:
+            scanner = nmap.PortScanner()
             scanner.scan(ip_address, arguments='-O', timeout=10)
-        except nmap.PortScannerError as e:
+        except (nmap.PortScannerError, OSError) as e:
             return f"Scan error: {str(e)}"
 
         if ip_address not in scanner.all_hosts():
@@ -160,7 +175,7 @@ def run_local_scan(num_threads,ports):
         try:
             hostname = socket.gethostbyaddr(ip_address)[0]
             return hostname
-        except socket.herror:
+        except (socket.herror, socket.gaierror, OSError):
             return "Hostname not available"
 
     port_list = ports
